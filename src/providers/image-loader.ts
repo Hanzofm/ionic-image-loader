@@ -19,6 +19,7 @@ interface QueueItem {
 }
 
 declare const Ionic: any;
+declare var cordova;
 
 @Injectable()
 export class ImageLoader {
@@ -327,8 +328,27 @@ export class ImageLoader {
 
         const localDir = this.getFileCacheDirectory() + this.config.cacheDirectoryName + '/';
         const fileName = this.createFileName(currentItem.imageUrl);
-
-        this.http.get(currentItem.imageUrl, {
+        console.log('holaaaaaaa');
+        cordova.plugin.http.downloadFile(currentItem.imageUrl, {}, this.config.httpHeaders, localDir + fileName, (file: FileEntry) => {
+  if (this.isCacheSpaceExceeded) {
+    this.maintainCacheSize();
+  }
+  this.addFileToIndex(file).then(() => {
+    this.getCachedImagePath(currentItem.imageUrl).then((localUrl) => {
+      currentItem.resolve(localUrl);
+      resolve();
+      done();
+      this.maintainCacheSize();
+    });
+  });
+}, (e) => { //Could not get image via httpClient 
+   error(e); 
+} );
+        
+        
+        
+        
+       /* this.http.get(currentItem.imageUrl, {
           responseType: 'blob',
           headers: this.config.httpHeaders
         }).subscribe(
@@ -355,7 +375,7 @@ export class ImageLoader {
             //Could not get image via httpClient
             error(e);
             reject(e);
-          });
+          });*/
         },
       );
     } else {
